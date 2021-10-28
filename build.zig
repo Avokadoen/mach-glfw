@@ -37,9 +37,9 @@ pub const Options = struct {
 };
 
 pub fn link(b: *Builder, step: *std.build.LibExeObjStep, options: Options) void {
+    linkGLFWDependencies(b, step, options);
     const lib = buildLibrary(b, step, options);
     step.linkLibrary(lib);
-    linkGLFWDependencies(b, step, options);
 }
 
 fn buildLibrary(b: *Builder, step: *std.build.LibExeObjStep, options: Options) *std.build.LibExeObjStep {
@@ -75,7 +75,7 @@ fn buildLibrary(b: *Builder, step: *std.build.LibExeObjStep, options: Options) *
                 var abs_path = std.fs.path.join(b.allocator, &.{ thisDir(), path }) catch unreachable;
                 sources.append(abs_path) catch unreachable;
             }
-            lib.addCSourceFiles(sources.items, &.{"-D_GLFW_WIN32"});
+            lib.addCSourceFiles(sources.items, &.{ "-D_VK_USE_PLATFORM_WIN32_KHR", "-D_GLFW_WIN32"});
         },
         .macos => {
             includeSdkMacOS(b, lib);

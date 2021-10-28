@@ -99,9 +99,9 @@ pub const VKProc = fn () callconv(.C) void;
 /// @pointer_lifetime The returned function pointer is valid until the library is terminated.
 ///
 /// @thread_safety This function may be called from any thread.
-pub inline fn getInstanceProcAddress(vk_instance: ?*opaque {}, proc_name: [*c]const u8) Error!?VKProc {
+pub fn getInstanceProcAddress(vk_instance: ?*opaque {}, proc_name: [*c]const u8) callconv(.C) ?VKProc {
     const proc_address = c.glfwGetInstanceProcAddress(if (vk_instance) |v| @ptrCast(c.VkInstance, v) else null, proc_name);
-    try getError();
+    getError() catch {}; // ignore errors for now
     if (proc_address) |addr| return addr;
     return null;
 }
@@ -186,11 +186,22 @@ pub inline fn getPhysicalDevicePresentationSupport(vk_instance: *opaque {}, vk_p
 /// Vulkan objects, see the Vulkan specification.
 ///
 /// see also: vulkan_surface, glfw.getRequiredInstanceExtensions
-pub inline fn createWindowSurface(vk_instance: *opaque {}, window: Window, vk_allocation_callbacks: *opaque {}, vk_surface_khr: *opaque {}) Error!i32 {
+pub const vkInstance = *opaque {};
+pub const vkAllocationCallback = *opaque {};
+pub const vkSurfaceKHR = *opaque {};
+
+pub fn createWindowSurface(vk_instance: vkInstance, window: Window, vk_allocation_callbacks: ?vkAllocationCallback, vk_surface_khr: vkSurfaceKHR) Error!i32 {
+    const callback: ?*c.VkAllocationCallbacks = blk: {
+        if (vk_allocation_callbacks) |some| {
+            break :blk @ptrCast(*c.VkAllocationCallbacks, @alignCast(@alignOf(*c.VkAllocationCallbacks), some));
+        } else {
+            break :blk null;
+        }
+    };
     const v = c.glfwCreateWindowSurface(
         @ptrCast(c.VkInstance, vk_instance),
         window.handle,
-        @ptrCast(*c.VkAllocationCallbacks, @alignCast(@alignOf(*c.VkAllocationCallbacks), vk_allocation_callbacks)),
+        callback,
         @ptrCast(*c.VkSurfaceKHR, @alignCast(@alignOf(*c.VkSurfaceKHR), vk_surface_khr)),
     );
     try getError();

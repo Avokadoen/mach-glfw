@@ -18,11 +18,12 @@ pub const Image = @import("Image.zig");
 pub const Joystick = @import("Joystick.zig");
 pub const mod = @import("mod.zig");
 pub const Monitor = @import("Monitor.zig");
-pub const mouse_button = @import("mouse_button.zig");
 pub const version = @import("version.zig");
 pub const VideoMode = @import("VideoMode.zig");
 pub const Window = @import("Window.zig");
 pub const Cursor = @import("Cursor.zig");
+
+pub const MouseButton = @import("mouse_button.zig").MouseButton;
 pub const Key = key.Key;
 
 pub usingnamespace @import("clipboard.zig");

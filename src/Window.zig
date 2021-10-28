@@ -14,13 +14,16 @@ const Key = @import("key.zig").Key;
 
 const Window = @This();
 
-handle: *c.GLFWwindow,
+/// a raw glfw window
+pub const Handle = c.GLFWwindow;
+
+handle: *Handle,
 
 /// Returns a Zig GLFW window from an underlying C GLFW window handle.
 ///
 /// Note that the Zig GLFW library stores a custom user pointer in order to make callbacks nicer,
 /// see glfw.Window.InternalUserPointer.
-pub inline fn from(handle: *c.GLFWwindow) Error!Window {
+pub inline fn from(handle: *Handle) Error!Window {
     const ptr = c.glfwGetWindowUserPointer(handle);
     if (ptr == null) {
         const internal = try std.heap.c_allocator.create(InternalUserPointer);
@@ -991,7 +994,7 @@ pub inline fn getUserPointer(self: Window, Type: anytype) ?Type {
     return null;
 }
 
-fn setPosCallbackWrapper(handle: ?*c.GLFWwindow, xpos: c_int, ypos: c_int) callconv(.C) void {
+fn setPosCallbackWrapper(handle: ?*Handle, xpos: c_int, ypos: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setPosCallback.?(window, @intCast(isize, xpos), @intCast(isize, ypos));
@@ -1028,7 +1031,7 @@ pub inline fn setPosCallback(self: Window, callback: ?fn (window: Window, xpos: 
     getError() catch {};
 }
 
-fn setSizeCallbackWrapper(handle: ?*c.GLFWwindow, width: c_int, height: c_int) callconv(.C) void {
+fn setSizeCallbackWrapper(handle: ?*Handle, width: c_int, height: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setSizeCallback.?(window, @intCast(isize, width), @intCast(isize, height));
@@ -1058,7 +1061,7 @@ pub inline fn setSizeCallback(self: Window, callback: ?fn (window: Window, width
     getError() catch {};
 }
 
-fn setCloseCallbackWrapper(handle: ?*c.GLFWwindow) callconv(.C) void {
+fn setCloseCallbackWrapper(handle: ?*Handle) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setCloseCallback.?(window);
@@ -1096,7 +1099,7 @@ pub inline fn setCloseCallback(self: Window, callback: ?fn (window: Window) void
     getError() catch {};
 }
 
-fn setRefreshCallbackWrapper(handle: ?*c.GLFWwindow) callconv(.C) void {
+fn setRefreshCallbackWrapper(handle: ?*Handle) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setRefreshCallback.?(window);
@@ -1133,7 +1136,7 @@ pub inline fn setRefreshCallback(self: Window, callback: ?fn (window: Window) vo
     getError() catch {};
 }
 
-fn setFocusCallbackWrapper(handle: ?*c.GLFWwindow, focused: c_int) callconv(.C) void {
+fn setFocusCallbackWrapper(handle: ?*Handle, focused: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setFocusCallback.?(window, if (focused == c.GLFW_TRUE) true else false);
@@ -1170,7 +1173,7 @@ pub inline fn setFocusCallback(self: Window, callback: ?fn (window: Window, focu
     getError() catch {};
 }
 
-fn setIconifyCallbackWrapper(handle: ?*c.GLFWwindow, iconified: c_int) callconv(.C) void {
+fn setIconifyCallbackWrapper(handle: ?*Handle, iconified: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setIconifyCallback.?(window, if (iconified == c.GLFW_TRUE) true else false);
@@ -1205,7 +1208,7 @@ pub inline fn setIconifyCallback(self: Window, callback: ?fn (window: Window, ic
     getError() catch {};
 }
 
-fn setMaximizeCallbackWrapper(handle: ?*c.GLFWwindow, maximized: c_int) callconv(.C) void {
+fn setMaximizeCallbackWrapper(handle: ?*Handle, maximized: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setMaximizeCallback.?(window, if (maximized == c.GLFW_TRUE) true else false);
@@ -1238,7 +1241,7 @@ pub inline fn setMaximizeCallback(self: Window, callback: ?fn (window: Window, m
     getError() catch {};
 }
 
-fn setFramebufferSizeCallbackWrapper(handle: ?*c.GLFWwindow, width: c_int, height: c_int) callconv(.C) void {
+fn setFramebufferSizeCallbackWrapper(handle: ?*Handle, width: c_int, height: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setFramebufferSizeCallback.?(window, @intCast(isize, width), @intCast(isize, height));
@@ -1271,7 +1274,7 @@ pub inline fn setFramebufferSizeCallback(self: Window, callback: ?fn (window: Wi
     getError() catch {};
 }
 
-fn setContentScaleCallbackWrapper(handle: ?*c.GLFWwindow, xscale: f32, yscale: f32) callconv(.C) void {
+fn setContentScaleCallbackWrapper(handle: ?*Handle, xscale: f32, yscale: f32) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setContentScaleCallback.?(window, xscale, yscale);
@@ -1304,6 +1307,15 @@ pub inline fn setContentScaleCallback(self: Window, callback: ?fn (window: Windo
     getError() catch {};
 }
 
+/// enum with all glfw window input modes
+pub const InputMode = enum(c_int) {
+    cursor = c.GLFW_CURSOR,
+    sticky_keys = c.GLFW_STICKY_KEYS, 
+    sticky_mouse_buttons = c.GLFW_STICKY_MOUSE_BUTTONS, 
+    lock_key_mods = c.GLFW_LOCK_KEY_MODS, 
+    raw_mouse_motion = c.GLFW_RAW_MOUSE_MOTION,
+};
+
 /// Returns the value of an input option for the specified window.
 ///
 /// This function returns the value of an input option for the specified window. The mode must be
@@ -1316,8 +1328,8 @@ pub inline fn setContentScaleCallback(self: Window, callback: ?fn (window: Windo
 /// @thread_safety This function must only be called from the main thread.
 ///
 /// see also: glfw.setInputMode
-pub inline fn getInputMode(self: Window, mode: isize) isize {
-    const value = c.glfwGetInputMode(self.handle, @intCast(c_int, mode));
+pub inline fn getInputMode(self: Window, mode: InputMode) isize {
+    const value = c.glfwGetInputMode(self.handle, @enumToInt(mode));
 
     // Possible errors include glfw.Error.NotInitialized and glfw.Error.InvalidEnum.
     getError() catch @panic("unexpected error getting input mode, invalid enum?");
@@ -1370,10 +1382,10 @@ pub inline fn getInputMode(self: Window, mode: isize) isize {
 /// @thread_safety This function must only be called from the main thread.
 ///
 /// see also: glfw.getInputMode
-pub inline fn setInputMode(self: Window, mode: isize, value: anytype) Error!void {
+pub inline fn setInputMode(self: Window, mode: InputMode, value: anytype) Error!void {
     switch (@typeInfo(@TypeOf(value))) {
-        .Int, .ComptimeInt => c.glfwSetInputMode(self.handle, @intCast(c_int, mode), @intCast(c_int, value)),
-        .Bool => c.glfwSetInputMode(self.handle, @intCast(c_int, mode), @intCast(c_int, @boolToInt(value))),
+        .Int, .ComptimeInt => c.glfwSetInputMode(self.handle, @enumToInt(mode), @intCast(c_int, value)),
+        .Bool => c.glfwSetInputMode(self.handle, @enumToInt(mode), @intCast(c_int, @boolToInt(value))),
         else => @compileError("expected a int or bool, got " ++ @typeName(@TypeOf(value))),
     }
     try getError();
@@ -1521,7 +1533,7 @@ pub inline fn setCursor(self: Window, cursor: Cursor) Error!void {
     try getError();
 }
 
-fn setKeyCallbackWrapper(handle: ?*c.GLFWwindow, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
+fn setKeyCallbackWrapper(handle: ?*Handle, key: c_int, scancode: c_int, action: c_int, mods: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setKeyCallback.?(window, @intCast(isize, key), @intCast(isize, scancode), @intCast(isize, action), @intCast(isize, mods));
@@ -1572,7 +1584,7 @@ pub inline fn setKeyCallback(self: Window, callback: ?fn (window: Window, key: i
     getError() catch {};
 }
 
-fn setCharCallbackWrapper(handle: ?*c.GLFWwindow, codepoint: c_uint) callconv(.C) void {
+fn setCharCallbackWrapper(handle: ?*Handle, codepoint: c_uint) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setCharCallback.?(window, @intCast(u21, codepoint));
@@ -1613,7 +1625,7 @@ pub inline fn setCharCallback(self: Window, callback: ?fn (window: Window, codep
     getError() catch {};
 }
 
-fn setMouseButtonCallbackWrapper(handle: ?*c.GLFWwindow, button: c_int, action: c_int, mods: c_int) callconv(.C) void {
+fn setMouseButtonCallbackWrapper(handle: ?*Handle, button: c_int, action: c_int, mods: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setMouseButtonCallback.?(window, @intCast(isize, button), @intCast(isize, action), @intCast(isize, mods));
@@ -1652,7 +1664,7 @@ pub inline fn setMouseButtonCallback(self: Window, callback: ?fn (window: Window
     getError() catch {};
 }
 
-fn setCursorPosCallbackWrapper(handle: ?*c.GLFWwindow, xpos: f64, ypos: f64) callconv(.C) void {
+fn setCursorPosCallbackWrapper(handle: ?*Handle, xpos: f64, ypos: f64) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setCursorPosCallback.?(window, xpos, ypos);
@@ -1686,7 +1698,7 @@ pub inline fn setCursorPosCallback(self: Window, callback: ?fn (window: Window, 
     getError() catch {};
 }
 
-fn setCursorEnterCallbackWrapper(handle: ?*c.GLFWwindow, entered: c_int) callconv(.C) void {
+fn setCursorEnterCallbackWrapper(handle: ?*Handle, entered: c_int) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setCursorEnterCallback.?(window, entered == c.GLFW_TRUE);
@@ -1717,7 +1729,7 @@ pub inline fn setCursorEnterCallback(self: Window, callback: ?fn (window: Window
     getError() catch {};
 }
 
-fn setScrollCallbackWrapper(handle: ?*c.GLFWwindow, xoffset: f64, yoffset: f64) callconv(.C) void {
+fn setScrollCallbackWrapper(handle: ?*Handle, xoffset: f64, yoffset: f64) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setScrollCallback.?(window, xoffset, yoffset);
@@ -1752,7 +1764,7 @@ pub inline fn setScrollCallback(self: Window, callback: ?fn (window: Window, xof
     getError() catch {};
 }
 
-fn setDropCallbackWrapper(handle: ?*c.GLFWwindow, path_count: c_int, paths: [*c][*c]const u8) callconv(.C) void {
+fn setDropCallbackWrapper(handle: ?*Handle, path_count: c_int, paths: [*c][*c]const u8) callconv(.C) void {
     const window = from(handle.?) catch unreachable;
     const internal = window.getInternal();
     internal.setDropCallback.?(window, paths[0..@intCast(usize, path_count)]);
