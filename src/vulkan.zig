@@ -226,7 +226,7 @@ pub inline fn getPhysicalDevicePresentationSupport(
 /// Vulkan objects, see the Vulkan specification.
 ///
 /// see also: vulkan_surface, glfw.getRequiredInstanceExtensions
-pub inline fn createWindowSurface(vk_instance: anytype, window: Window, vk_allocation_callbacks: anytype, vk_surface_khr: anytype) i32 {
+pub inline fn createWindowSurface(vk_instance: anytype, window: Window, vk_allocation_callbacks: anytype, vk_surface_khr: anytype) bool {
     internal_debug.assertInitialized();
     // zig-vulkan uses enums to represent opaque pointers:
     // pub const Instance = enum(usize) { null_handle = 0, _ };
