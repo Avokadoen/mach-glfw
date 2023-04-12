@@ -110,7 +110,7 @@ fn buildLibrary(b: *Build, optimize: std.builtin.OptimizeMode, target: std.zig.C
     linkGLFWDependencies(b, lib, options);
 
     if (options.install_libs)
-        lib.install();
+        b.installArtifact(lib);
 
     return lib;
 }
